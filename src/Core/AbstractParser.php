@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of the API Helper package.
+ *
+ * (c) Pavel Logachev <alhames@mail.ru>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace ApiHelper\Core;
 
 use GuzzleHttp\Cookie\CookieJar;
@@ -169,7 +178,7 @@ abstract class AbstractParser extends AbstractClient implements ParserInterface
             $this->saveCookie();
         }
 
-        if (!in_array($response->getStatusCode(), [301, 302, 303])) { // todo
+        if (!in_array($response->getStatusCode(), [301, 302, 303], true)) { // todo
             return $response;
         }
 
@@ -206,7 +215,7 @@ abstract class AbstractParser extends AbstractClient implements ParserInterface
             $key = substr($cookieParam, 0, $sep);
             $key = strtolower($key);
 
-            if (in_array($key, ['domain', 'path', 'max-age', 'expires'])) {
+            if (in_array($key, ['domain', 'path', 'max-age', 'expires'], true)) {
                 $key = 'max-age' === $key ? 'Max-Age' : ucfirst($key);
                 $cookie[$key] = substr($cookieParam, $sep + 1);
             }
