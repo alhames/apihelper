@@ -1,14 +1,5 @@
 <?php
 
-/*
- * This file is part of the API Helper package.
- *
- * (c) Pavel Logachev <alhames@mail.ru>
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
-
 namespace ApiHelper\Core;
 
 use ApiHelper\Exception\InvalidArgumentException;
@@ -22,12 +13,6 @@ use Psr\Http\Message\ResponseInterface;
 abstract class AbstractOAuth2Client extends AbstractClient implements OAuth2ClientInterface
 {
     /** @var string */
-    protected static $authorizeUri;
-
-    /** @var string */
-    protected static $tokenUri;
-
-    /** @var string */
     protected static $scopeDelimiter = ' ';
 
     /** @var string */
@@ -40,9 +25,6 @@ abstract class AbstractOAuth2Client extends AbstractClient implements OAuth2Clie
     protected $scope;
 
     /** @var string */
-    protected $display;
-
-    /** @var string */
     protected $accessToken;
 
     /** @var string */
@@ -51,22 +33,11 @@ abstract class AbstractOAuth2Client extends AbstractClient implements OAuth2Clie
     /** @var int */
     protected $tokenExpiresAt;
 
-    /** @var int|string */
-    protected $accountId;
-
     /**
      * {@inheritdoc}
      */
     public function __construct(array $config)
     {
-        if (!isset($config['client_id'])) {
-            throw new InvalidArgumentException('Undefined options: client_id.');
-        }
-
-        if (!isset($config['client_secret'])) {
-            throw new InvalidArgumentException('Undefined options: client_secret.');
-        }
-
         parent::__construct($config);
 
         $this->clientSecret = $config['client_secret'];
@@ -88,16 +59,12 @@ abstract class AbstractOAuth2Client extends AbstractClient implements OAuth2Clie
         if (isset($config['refresh_token'])) {
             $this->setRefreshToken($config['refresh_token']);
         }
-
-        if (isset($config['display'])) {
-            $this->display = $config['display'];
-        }
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getAuthUrl($state = null, array $params = [])
+    public function getAuthorizationUrl($state = null, array $params = [])
     {
         $params['response_type'] = 'code';
         $params['client_id'] = $this->clientId;
@@ -114,17 +81,13 @@ abstract class AbstractOAuth2Client extends AbstractClient implements OAuth2Clie
             $params['state'] = $state;
         }
 
-        if (null !== $this->display) {
-            $params['display'] = $this->display;
-        }
-
-        return $this->getAuthorizeUri($params);
+        return $this->getAuthorizeUrl($params);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function requestAccessToken($code, array $params = [])
+    public function authorize($code, array $params = [])
     {
         if (empty($code) || !is_string($code)) {
             throw new InvalidArgumentException('Code for access token request is invalid or empty.');
@@ -139,7 +102,7 @@ abstract class AbstractOAuth2Client extends AbstractClient implements OAuth2Clie
             $params['redirect_uri'] = $this->redirectUri;
         }
 
-        $response = $this->httpRequest('POST', $this->getTokenUri(), ['form_params' => $params]);
+        $response = $this->httpRequest('POST', $this->getTokenUrl(), ['form_params' => $params]);
 
         return $this->handleTokenResponse($response);
     }
@@ -147,10 +110,10 @@ abstract class AbstractOAuth2Client extends AbstractClient implements OAuth2Clie
     /**
      * {@inheritdoc}
      */
-    public function refreshAccessToken($refreshToken = null, array $params = [])
+    public function refreshAccessToken(array $params = [])
     {
-        if (null !== $refreshToken) {
-            $this->setRefreshToken($refreshToken);
+        if (null === $this->refreshToken) {
+            throw new InvalidArgumentException('Refresh token is empty.');
         }
 
         $params['grant_type'] = 'refresh_token';
@@ -158,7 +121,7 @@ abstract class AbstractOAuth2Client extends AbstractClient implements OAuth2Clie
         $params['client_id'] = $this->clientId;
         $params['client_secret'] = $this->clientSecret;
 
-        $response = $this->httpRequest('POST', $this->getTokenUri(), ['form_params' => $params]);
+        $response = $this->httpRequest('POST', $this->getTokenUrl(), ['form_params' => $params]);
 
         return $this->handleTokenResponse($response);
     }
@@ -178,7 +141,6 @@ abstract class AbstractOAuth2Client extends AbstractClient implements OAuth2Clie
     {
         if ($this->accessToken !== $token) {
             $this->accessToken = $token;
-            $this->accountId = null;
         }
 
         return $this;
@@ -213,53 +175,13 @@ abstract class AbstractOAuth2Client extends AbstractClient implements OAuth2Clie
     /**
      * {@inheritdoc}
      */
-    public function getAccountId()
-    {
-        return $this->accountId;
-    }
-
-    /**
-     * @param int|string $accountId
-     *
-     * @return self
-     */
-    public function setAccountId($accountId)
-    {
-        if (null === $this->accountId) {
-            $this->accountId = $accountId;
-        }
-
-        return $this;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function apiRequest($method, array $params = [], $type = 'GET')
+    public function request($apiMethod, array $options = [], $httpMethod = 'GET')
     {
         if (null !== $this->accessToken) {
-            $params['access_token'] = $this->accessToken;
+            $options['access_token'] = $this->accessToken;
         }
 
-        return parent::apiRequest($method, $params, $type);
-    }
-
-    /**
-     * @param array $params
-     *
-     * @return string
-     */
-    protected function getAuthorizeUri(array $params)
-    {
-        return static::$authorizeUri.'?'.http_build_query($params);
-    }
-
-    /**
-     * @return string
-     */
-    protected function getTokenUri()
-    {
-        return static::$tokenUri;
+        return parent::request($apiMethod, $options, $httpMethod);
     }
 
     /**
@@ -305,6 +227,26 @@ abstract class AbstractOAuth2Client extends AbstractClient implements OAuth2Clie
     /**
      * {@inheritdoc}
      */
+    protected function getRequiredOptions()
+    {
+        return ['client_id', 'client_secret'];
+    }
+
+    /**
+     * @param array $query
+     *
+     * @return string
+     */
+    abstract protected function getAuthorizeUrl(array $query);
+
+    /**
+     * @return string
+     */
+    abstract protected function getTokenUrl();
+
+    /**
+     * {@inheritdoc}
+     */
     public function serialize()
     {
         return serialize([
@@ -312,11 +254,9 @@ abstract class AbstractOAuth2Client extends AbstractClient implements OAuth2Clie
             $this->clientSecret,
             $this->redirectUri,
             $this->scope,
-            $this->display,
             $this->accessToken,
             $this->refreshToken,
             $this->tokenExpiresAt,
-            $this->accountId,
         ]);
     }
 
@@ -332,10 +272,8 @@ abstract class AbstractOAuth2Client extends AbstractClient implements OAuth2Clie
             $this->scope,
             $this->accessToken,
             $this->refreshToken,
-            $this->display,
-            $this->tokenExpiresAt,
-            $this->accountId
-            ) = unserialize($serialized);
+            $this->tokenExpiresAt
+        ) = unserialize($serialized);
 
         parent::unserialize($parentStr);
     }

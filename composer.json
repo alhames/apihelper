@@ -1,8 +1,8 @@
 {
-  "name": "alhames/apihelper-core",
+  "name": "alhames/apihelper",
   "type": "library",
-  "description": "API Helpers library core.",
-  "homepage": "https://github.com/alhames/apihelper-core",
+  "description": "API Helpers library.",
+  "homepage": "https://github.com/alhames/apihelper",
   "license": "MIT",
   "require": {
     "php": "^5.5 || ^7.0",
@@ -17,12 +17,11 @@
     }
   ],
   "support": {
-    "issues": "https://github.com/alhames/apihelper-core/issues"
+    "issues": "https://github.com/alhames/apihelper/issues"
   },
   "autoload": {
     "psr-4": {
-      "ApiHelper\\Core\\": "src/Core",
-      "ApiHelper\\Exception\\": "src/Exception"
+      "ApiHelper\\": "src/ApiHelper"
     }
   }
 }

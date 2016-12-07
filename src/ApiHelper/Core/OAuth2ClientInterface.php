@@ -1,14 +1,5 @@
 <?php
 
-/*
- * This file is part of the API Helper package.
- *
- * (c) Pavel Logachev <alhames@mail.ru>
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
-
 namespace ApiHelper\Core;
 
 /**
@@ -24,7 +15,7 @@ interface OAuth2ClientInterface extends ClientInterface
      *
      * @return string
      */
-    public function getAuthUrl($state = null, array $params = []);
+    public function getAuthorizationUrl($state = null, array $params = []);
 
     /**
      * @link http://tools.ietf.org/html/rfc6749#section-4.1.3
@@ -34,17 +25,16 @@ interface OAuth2ClientInterface extends ClientInterface
      *
      * @return array
      */
-    public function requestAccessToken($code, array $params = []);
+    public function authorize($code, array $params = []);
 
     /**
      * @link http://tools.ietf.org/html/rfc6749#section-6
      *
-     * @param string $refreshToken
      * @param array  $params
      *
      * @return array
      */
-    public function refreshAccessToken($refreshToken = null, array $params = []);
+    public function refreshAccessToken(array $params = []);
 
     /**
      * @return string
@@ -54,7 +44,7 @@ interface OAuth2ClientInterface extends ClientInterface
     /**
      * @param string $token
      *
-     * @return self
+     * @return static
      */
     public function setAccessToken($token = null);
 
@@ -66,24 +56,12 @@ interface OAuth2ClientInterface extends ClientInterface
     /**
      * @param string $token
      *
-     * @return self
+     * @return static
      */
     public function setRefreshToken($token = null);
 
     /**
-     * @return int
+     * @return int Timestamp
      */
     public function getTokenExpiresAt();
-
-    /**
-     * @return int|string
-     */
-    public function getAccountId();
-
-    /**
-     * @param int|string $accountId
-     *
-     * @return self
-     */
-    public function setAccountId($accountId);
 }

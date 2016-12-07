@@ -1,14 +1,5 @@
 <?php
 
-/*
- * This file is part of the API Helper package.
- *
- * (c) Pavel Logachev <alhames@mail.ru>
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
-
 namespace ApiHelper\Core;
 
 use GuzzleHttp\Cookie\CookieJar;
@@ -68,7 +59,7 @@ abstract class AbstractParser extends AbstractClient implements ParserInterface
     /**
      * {@inheritdoc}
      */
-    public function setCookie($name, $value = null, $expire = null, $path = null, $domain = null, $secure = null)
+    public function setCookie($name, $value = null, $expires = null, $path = null, $domain = null, $secure = null)
     {
         $cookie = ['Name' => $name];
 
@@ -76,8 +67,8 @@ abstract class AbstractParser extends AbstractClient implements ParserInterface
             $cookie['Value'] = $value;
         }
 
-        if (null !== $expire) {
-            $cookie['Expires'] = (int) $expire;
+        if (null !== $expires) {
+            $cookie['Expires'] = (int) $expires;
         }
 
         if (null !== $path) {
@@ -112,7 +103,7 @@ abstract class AbstractParser extends AbstractClient implements ParserInterface
             $options[RequestOptions::HEADERS]['Referer'] = $referrer;
         }
 
-        $response = $this->httpRequest('GET', $this->getApiUri($uri), $options);
+        $response = $this->httpRequest('GET', $this->getApiUrl($uri), $options);
 
         return $this->handleResponse($response);
     }
@@ -132,7 +123,7 @@ abstract class AbstractParser extends AbstractClient implements ParserInterface
             $options[RequestOptions::HEADERS]['Referer'] = $referrer;
         }
 
-        $response = $this->httpRequest('POST', $this->getApiUri($uri), $options);
+        $response = $this->httpRequest('POST', $this->getApiUrl($uri), $options);
 
         return $this->handleResponse($response);
     }
@@ -178,7 +169,7 @@ abstract class AbstractParser extends AbstractClient implements ParserInterface
             $this->saveCookie();
         }
 
-        if (!in_array($response->getStatusCode(), [301, 302, 303], true)) { // todo
+        if (!in_array($response->getStatusCode(), [301, 302, 303])) { // todo
             return $response;
         }
 
@@ -215,7 +206,7 @@ abstract class AbstractParser extends AbstractClient implements ParserInterface
             $key = substr($cookieParam, 0, $sep);
             $key = strtolower($key);
 
-            if (in_array($key, ['domain', 'path', 'max-age', 'expires'], true)) {
+            if (in_array($key, ['domain', 'path', 'max-age', 'expires'])) {
                 $key = 'max-age' === $key ? 'Max-Age' : ucfirst($key);
                 $cookie[$key] = substr($cookieParam, $sep + 1);
             }

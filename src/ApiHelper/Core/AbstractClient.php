@@ -1,16 +1,8 @@
 <?php
 
-/*
- * This file is part of the API Helper package.
- *
- * (c) Pavel Logachev <alhames@mail.ru>
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
-
 namespace ApiHelper\Core;
 
+use ApiHelper\Exception\InvalidArgumentException;
 use ApiHelper\Exception\ServiceUnavailableException;
 use ApiHelper\Exception\UnknownContentTypeException;
 use GuzzleHttp\Client as HttpClient;
@@ -23,10 +15,7 @@ use Psr\Http\Message\ResponseInterface;
  */
 abstract class AbstractClient implements ClientInterface, \Serializable
 {
-    /** @var string URI for API requests */
-    protected static $apiUri;
-
-    /** @var string */
+    /** @var string|int */
     protected $clientId;
 
     /** @var string */
@@ -36,7 +25,7 @@ abstract class AbstractClient implements ClientInterface, \Serializable
     protected $locale;
 
     /** @var array */
-    protected $options;
+    protected $options = [];
 
     /** @var HttpClientInterface */
     protected $httpClient;
@@ -54,13 +43,19 @@ abstract class AbstractClient implements ClientInterface, \Serializable
     protected $lastRequestTime;
 
     /** @var array */
-    protected $history;
+    protected $history = [];
 
     /**
      * @param array $config
      */
     public function __construct(array $config = [])
     {
+        foreach ($this->getRequiredOptions() as $option) {
+            if (!isset($config[$option])) {
+                throw new InvalidArgumentException('Undefined option: '.$option.'.');
+            }
+        }
+
         if (isset($config['client_id'])) {
             $this->setClientId($config['client_id']);
         }
@@ -93,13 +88,37 @@ abstract class AbstractClient implements ClientInterface, \Serializable
     /**
      * {@inheritdoc}
      */
+    public function request($apiMethod, array $options = [], $httpMethod = 'GET')
+    {
+        $config = [];
+
+        if (!empty($options)) {
+            if ('GET' === $httpMethod) {
+                $config[RequestOptions::QUERY] = $options;
+            } elseif ('POST' === $httpMethod) {
+                $config[RequestOptions::FORM_PARAMS] = $options;
+            } else {
+                throw new InvalidArgumentException(sprintf('HTTP method %s is not supported', $httpMethod));
+            }
+        }
+
+        $response = $this->httpRequest($httpMethod, $this->getApiUrl($apiMethod), $config);
+
+        return $this->handleResponse($response);
+    }
+
+    /**
+     * @return string|int
+     */
     public function getClientId()
     {
         return $this->clientId;
     }
 
     /**
-     * {@inheritdoc}
+     * @param string|int $clientId
+     *
+     * @return static
      */
     public function setClientId($clientId)
     {
@@ -109,7 +128,11 @@ abstract class AbstractClient implements ClientInterface, \Serializable
     }
 
     /**
-     * {@inheritdoc}
+     * @link http://docs.guzzlephp.org/en/latest/request-options.html#proxy
+     *
+     * @param string|array $proxy
+     *
+     * @return static
      */
     public function setProxy($proxy = null)
     {
@@ -119,7 +142,9 @@ abstract class AbstractClient implements ClientInterface, \Serializable
     }
 
     /**
-     * {@inheritdoc}
+     * @param HttpClientInterface $httpClient
+     *
+     * @return static
      */
     public function setHttpClient(HttpClientInterface $httpClient)
     {
@@ -129,7 +154,9 @@ abstract class AbstractClient implements ClientInterface, \Serializable
     }
 
     /**
-     * {@inheritdoc}
+     * @param int $timeout
+     *
+     * @return static
      */
     public function setTimeout($timeout)
     {
@@ -139,7 +166,9 @@ abstract class AbstractClient implements ClientInterface, \Serializable
     }
 
     /**
-     * {@inheritdoc}
+     * @param int|float $queryPerSecond
+     *
+     * @return static
      */
     public function setQps($queryPerSecond)
     {
@@ -149,7 +178,9 @@ abstract class AbstractClient implements ClientInterface, \Serializable
     }
 
     /**
-     * {@inheritdoc}
+     * @param string $locale
+     *
+     * @return static
      */
     public function setLocale($locale)
     {
@@ -159,7 +190,9 @@ abstract class AbstractClient implements ClientInterface, \Serializable
     }
 
     /**
-     * {@inheritdoc}
+     * @param string $version
+     *
+     * @return static
      */
     public function setVersion($version)
     {
@@ -169,9 +202,11 @@ abstract class AbstractClient implements ClientInterface, \Serializable
     }
 
     /**
-     * {@inheritdoc}
+     * @param array $options
+     *
+     * @return static
      */
-    public function setOptions(array $options = null)
+    public function setOptions(array $options = [])
     {
         $this->options = $options;
 
@@ -179,7 +214,10 @@ abstract class AbstractClient implements ClientInterface, \Serializable
     }
 
     /**
-     * {@inheritdoc}
+     * @param string $key
+     * @param mixed  $value
+     *
+     * @return static
      */
     public function setOption($key, $value = null)
     {
@@ -189,7 +227,7 @@ abstract class AbstractClient implements ClientInterface, \Serializable
     }
 
     /**
-     * {@inheritdoc}
+     * @return array
      */
     public function getHistory()
     {
@@ -275,35 +313,11 @@ abstract class AbstractClient implements ClientInterface, \Serializable
      */
     protected function getLastRequestUri()
     {
-        if (null === $this->history) {
+        if (empty($this->history)) {
             return;
         }
 
         return $this->history[count($this->history) - 1]['uri'];
-    }
-
-    /**
-     * @param string $method
-     * @param array  $params
-     * @param string $type
-     *
-     * @return mixed
-     */
-    public function apiRequest($method, array $params = [], $type = 'GET')
-    {
-        $options = [];
-
-        if (!empty($params)) {
-            if ('POST' === $type) {
-                $options[RequestOptions::FORM_PARAMS] = $params;
-            } else {
-                $options[RequestOptions::QUERY] = $params;
-            }
-        }
-
-        $response = $this->httpRequest($type, $this->getApiUri($method), $options);
-
-        return $this->handleResponse($response);
     }
 
     /**
@@ -358,14 +372,19 @@ abstract class AbstractClient implements ClientInterface, \Serializable
     }
 
     /**
+     * @return array
+     */
+    protected function getRequiredOptions()
+    {
+        return [];
+    }
+
+    /**
      * @param string $method
      *
      * @return string
      */
-    protected function getApiUri($method)
-    {
-        return static::$apiUri.$method;
-    }
+    abstract protected function getApiUrl($method);
 
     /**
      * @param ResponseInterface $response

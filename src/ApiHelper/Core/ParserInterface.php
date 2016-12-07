@@ -1,14 +1,5 @@
 <?php
 
-/*
- * This file is part of the API Helper package.
- *
- * (c) Pavel Logachev <alhames@mail.ru>
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
-
 namespace ApiHelper\Core;
 
 use Psr\Http\Message\ResponseInterface;
@@ -19,7 +10,7 @@ use Psr\Http\Message\ResponseInterface;
 interface ParserInterface extends ClientInterface
 {
     /**
-     * Путь для сохранения кук между сессиями.
+     * Путь для сохранения кук между сессиями
      *
      * @param string $path
      *
@@ -30,14 +21,14 @@ interface ParserInterface extends ClientInterface
     /**
      * @param string $name
      * @param string $value
-     * @param int    $expire
+     * @param int    $expires
      * @param string $path
      * @param string $domain
      * @param bool   $secure
      *
      * @return static
      */
-    public function setCookie($name, $value = null, $expire = null, $path = null, $domain = null, $secure = null);
+    public function setCookie($name, $value = null, $expires = null, $path = null, $domain = null, $secure = null);
 
     /**
      * @param string $uri
