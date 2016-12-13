@@ -27,12 +27,6 @@ abstract class AbstractOAuth2Client extends AbstractClient implements OAuth2Clie
     /** @var string */
     protected $accessToken;
 
-    /** @var string */
-    protected $refreshToken;
-
-    /** @var int */
-    protected $tokenExpiresAt;
-
     /**
      * {@inheritdoc}
      */
@@ -54,10 +48,6 @@ abstract class AbstractOAuth2Client extends AbstractClient implements OAuth2Clie
 
         if (isset($config['access_token'])) {
             $this->setAccessToken($config['access_token']);
-        }
-
-        if (isset($config['refresh_token'])) {
-            $this->setRefreshToken($config['refresh_token']);
         }
     }
 
@@ -110,14 +100,10 @@ abstract class AbstractOAuth2Client extends AbstractClient implements OAuth2Clie
     /**
      * {@inheritdoc}
      */
-    public function refreshAccessToken(array $params = [])
+    public function refreshAccessToken($refreshToken, array $params = [])
     {
-        if (null === $this->refreshToken) {
-            throw new InvalidArgumentException('Refresh token is empty.');
-        }
-
         $params['grant_type'] = 'refresh_token';
-        $params['refresh_token'] = $this->refreshToken;
+        $params['refresh_token'] = $refreshToken;
         $params['client_id'] = $this->clientId;
         $params['client_secret'] = $this->clientSecret;
 
@@ -139,37 +125,9 @@ abstract class AbstractOAuth2Client extends AbstractClient implements OAuth2Clie
      */
     public function setAccessToken($token = null)
     {
-        if ($this->accessToken !== $token) {
-            $this->accessToken = $token;
-        }
+        $this->accessToken = $token;
 
         return $this;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getRefreshToken()
-    {
-        return $this->refreshToken;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function setRefreshToken($token = null)
-    {
-        $this->refreshToken = $token;
-
-        return $this;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getTokenExpiresAt()
-    {
-        return $this->tokenExpiresAt;
     }
 
     /**
@@ -213,14 +171,6 @@ abstract class AbstractOAuth2Client extends AbstractClient implements OAuth2Clie
             $this->setAccessToken($data['access_token']);
         }
 
-        if (isset($data['refresh_token'])) {
-            $this->setRefreshToken($data['refresh_token']);
-        }
-
-        if (!empty($data['expires_in'])) {
-            $this->tokenExpiresAt = time() + $data['expires_in'];
-        }
-
         return $data;
     }
 
@@ -255,8 +205,6 @@ abstract class AbstractOAuth2Client extends AbstractClient implements OAuth2Clie
             $this->redirectUri,
             $this->scope,
             $this->accessToken,
-            $this->refreshToken,
-            $this->tokenExpiresAt,
         ]);
     }
 
@@ -270,9 +218,7 @@ abstract class AbstractOAuth2Client extends AbstractClient implements OAuth2Clie
             $this->clientSecret,
             $this->redirectUri,
             $this->scope,
-            $this->accessToken,
-            $this->refreshToken,
-            $this->tokenExpiresAt
+            $this->accessToken
         ) = unserialize($serialized);
 
         parent::unserialize($parentStr);

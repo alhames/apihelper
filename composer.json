@@ -26,5 +26,10 @@
     "psr-4": {
       "ApiHelper\\": "src/ApiHelper"
     }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "ApiHelper\\Tests\\": "tests/"
+    }
   }
 }

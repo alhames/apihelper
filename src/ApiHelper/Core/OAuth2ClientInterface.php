@@ -30,11 +30,12 @@ interface OAuth2ClientInterface extends ClientInterface
     /**
      * @link http://tools.ietf.org/html/rfc6749#section-6
      *
+     * @param string $refreshToken
      * @param array  $params
      *
      * @return array
      */
-    public function refreshAccessToken(array $params = []);
+    public function refreshAccessToken($refreshToken, array $params = []);
 
     /**
      * @return string
@@ -47,21 +48,4 @@ interface OAuth2ClientInterface extends ClientInterface
      * @return static
      */
     public function setAccessToken($token = null);
-
-    /**
-     * @return string
-     */
-    public function getRefreshToken();
-
-    /**
-     * @param string $token
-     *
-     * @return static
-     */
-    public function setRefreshToken($token = null);
-
-    /**
-     * @return int Timestamp
-     */
-    public function getTokenExpiresAt();
 }
