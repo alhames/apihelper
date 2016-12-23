@@ -48,4 +48,11 @@ interface OAuth2ClientInterface extends ClientInterface
      * @return static
      */
     public function setAccessToken($token = null);
+
+    /**
+     * @param string $redirectUri
+     *
+     * @return static
+     */
+    public function setRedirectUri($redirectUri);
 }

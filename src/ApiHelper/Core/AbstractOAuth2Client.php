@@ -133,6 +133,16 @@ abstract class AbstractOAuth2Client extends AbstractClient implements OAuth2Clie
     /**
      * {@inheritdoc}
      */
+    public function setRedirectUri($redirectUri)
+    {
+        $this->redirectUri = $redirectUri;
+
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function request($apiMethod, array $options = [], $httpMethod = 'GET')
     {
         if (null !== $this->accessToken) {
