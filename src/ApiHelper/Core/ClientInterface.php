@@ -16,7 +16,7 @@ namespace ApiHelper\Core;
  */
 interface ClientInterface
 {
-    const VERSION = '0.2-alpha';
+    const VERSION = '0.2.1';
 
     /**
      * @param string $apiMethod

@@ -29,8 +29,18 @@ class GoogleClient extends AbstractOAuth2Client
         if (!isset($params['access_type']) && isset($this->options['access_type'])) {
             $params['access_type'] = $this->options['access_type'];
         }
-//        $params['prompt'] = 'none'; // none|consent|select_account
-//        $params['login_hint'] = '';
+
+        if (!isset($params['prompt']) && isset($this->options['prompt'])) {
+            $params['prompt'] = $this->options['prompt'];
+        }
+
+        if (!isset($params['login_hint']) && isset($this->options['login_hint'])) {
+            $params['login_hint'] = $this->options['login_hint'];
+        }
+
+        if (!isset($params['include_granted_scopes']) && isset($this->options['include_granted_scopes'])) {
+            $params['include_granted_scopes'] = $this->options['include_granted_scopes'];
+        }
 
         return parent::getAuthorizationUrl($state, $params);
     }
