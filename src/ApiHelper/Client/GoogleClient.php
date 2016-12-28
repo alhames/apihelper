@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of the API Helper package.
+ *
+ * (c) Pavel Logachev <alhames@mail.ru>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace ApiHelper\Client;
 
 use ApiHelper\Core\AbstractOAuth2Client;
@@ -47,12 +56,12 @@ class GoogleClient extends AbstractOAuth2Client
 
         $data = json_decode($result['contents'], true);
 
-        if (400 == round($result['status'], -2)) {
-            throw new ApiException($response, $data['error']['message'], $data['error']['code']);
-        }
-
         if (200 === $result['status']) {
             return $data;
+        }
+
+        if (400 <= $result['status'] && $result['status'] < 500) {
+            throw new ApiException($response, $data['error']['message'], $data['error']['code']);
         }
 
         throw new UnknownResponseException($response, $result['contents']);
