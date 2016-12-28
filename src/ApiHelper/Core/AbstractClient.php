@@ -19,6 +19,9 @@ abstract class AbstractClient implements ClientInterface, \Serializable
     protected $clientId;
 
     /** @var string */
+    protected $clientSecret;
+
+    /** @var string */
     protected $version;
 
     /** @var string */
@@ -58,6 +61,10 @@ abstract class AbstractClient implements ClientInterface, \Serializable
 
         if (isset($config['client_id'])) {
             $this->setClientId($config['client_id']);
+        }
+
+        if (isset($config['client_secret'])) {
+            $this->setClientSecret($config['client_secret']);
         }
 
         if (isset($config['version'])) {
@@ -123,6 +130,26 @@ abstract class AbstractClient implements ClientInterface, \Serializable
     public function setClientId($clientId)
     {
         $this->clientId = $clientId;
+
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getClientSecret()
+    {
+        return $this->clientSecret;
+    }
+
+    /**
+     * @param string $clientSecret
+     *
+     * @return static
+     */
+    public function setClientSecret($clientSecret)
+    {
+        $this->clientSecret = $clientSecret;
 
         return $this;
     }
@@ -400,6 +427,7 @@ abstract class AbstractClient implements ClientInterface, \Serializable
     {
         return serialize([
             $this->clientId,
+            $this->clientSecret,
             $this->version,
             $this->locale,
             $this->timeout,
@@ -416,6 +444,7 @@ abstract class AbstractClient implements ClientInterface, \Serializable
     {
         list(
             $this->clientId,
+            $this->clientSecret,
             $this->version,
             $this->locale,
             $this->timeout,

@@ -16,9 +16,6 @@ abstract class AbstractOAuth2Client extends AbstractClient implements OAuth2Clie
     protected static $scopeDelimiter = ' ';
 
     /** @var string */
-    protected $clientSecret;
-
-    /** @var string */
     protected $redirectUri;
 
     /** @var array */
@@ -33,8 +30,6 @@ abstract class AbstractOAuth2Client extends AbstractClient implements OAuth2Clie
     public function __construct(array $config)
     {
         parent::__construct($config);
-
-        $this->clientSecret = $config['client_secret'];
 
         if (isset($config['redirect_uri'])) {
             $this->redirectUri = $config['redirect_uri'];
@@ -211,7 +206,6 @@ abstract class AbstractOAuth2Client extends AbstractClient implements OAuth2Clie
     {
         return serialize([
             parent::serialize(),
-            $this->clientSecret,
             $this->redirectUri,
             $this->scope,
             $this->accessToken,
@@ -225,7 +219,6 @@ abstract class AbstractOAuth2Client extends AbstractClient implements OAuth2Clie
     {
         list(
             $parentStr,
-            $this->clientSecret,
             $this->redirectUri,
             $this->scope,
             $this->accessToken
