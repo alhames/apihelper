@@ -13,7 +13,6 @@ namespace ApiHelper\Client;
 
 use ApiHelper\Core\AbstractOAuth2Client;
 use ApiHelper\Exception\ApiException;
-use ApiHelper\Exception\UnknownResponseException;
 use Psr\Http\Message\ResponseInterface;
 
 /**
@@ -48,33 +47,19 @@ class GoogleClient extends AbstractOAuth2Client
     /**
      * {@inheritdoc}
      */
-    protected function getApiUrl($method)
+    protected function checkResponseError($statusCode, $data, ResponseInterface $response)
     {
-        return 'https://www.googleapis.com/'.$method;
+        if (400 <= $statusCode && $statusCode < 500) {
+            throw new ApiException($response, $data['error']['message'], $data['error']['code']);
+        }
     }
 
     /**
      * {@inheritdoc}
      */
-    protected function handleResponse(ResponseInterface $response)
+    protected function getApiUrl($method)
     {
-        $result = $this->parseResponse($response);
-
-        if ('json' !== $result['type']) {
-            throw new UnknownResponseException($response, $result['contents']);
-        }
-
-        $data = json_decode($result['contents'], true);
-
-        if (200 === $result['status']) {
-            return $data;
-        }
-
-        if (400 <= $result['status'] && $result['status'] < 500) {
-            throw new ApiException($response, $data['error']['message'], $data['error']['code']);
-        }
-
-        throw new UnknownResponseException($response, $result['contents']);
+        return 'https://www.googleapis.com/'.$method;
     }
 
     /**

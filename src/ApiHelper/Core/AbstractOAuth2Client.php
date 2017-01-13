@@ -13,7 +13,8 @@ namespace ApiHelper\Core;
 
 use ApiHelper\Exception\InvalidArgumentException;
 use ApiHelper\Exception\RequestTokenException;
-use ApiHelper\Exception\UnknownResponseException;
+use ApiHelper\Exception\ServiceUnavailableException;
+use ApiHelper\Exception\UnknownContentTypeException;
 use Psr\Http\Message\ResponseInterface;
 
 /**
@@ -41,13 +42,11 @@ abstract class AbstractOAuth2Client extends AbstractClient implements OAuth2Clie
         parent::__construct($config);
 
         if (isset($config['redirect_uri'])) {
-            $this->redirectUri = $config['redirect_uri'];
+            $this->setRedirectUri($config['redirect_uri']);
         }
 
         if (isset($config['scope'])) {
-            $this->scope = is_array($config['scope'])
-                ? $config['scope']
-                : explode(static::$scopeDelimiter, $config['scope']);
+            $this->setScope($config['scope']);
         }
 
         if (isset($config['access_token'])) {
@@ -97,6 +96,7 @@ abstract class AbstractOAuth2Client extends AbstractClient implements OAuth2Clie
         }
 
         $response = $this->httpRequest('POST', $this->getTokenUrl(), ['form_params' => $params]);
+        // todo: log
 
         return $this->handleTokenResponse($response);
     }
@@ -112,6 +112,7 @@ abstract class AbstractOAuth2Client extends AbstractClient implements OAuth2Clie
         $params['client_secret'] = $this->clientSecret;
 
         $response = $this->httpRequest('POST', $this->getTokenUrl(), ['form_params' => $params]);
+        // todo: log
 
         return $this->handleTokenResponse($response);
     }
@@ -145,15 +146,27 @@ abstract class AbstractOAuth2Client extends AbstractClient implements OAuth2Clie
     }
 
     /**
+     * @param array|string $scope
+     *
+     * @return static
+     */
+    public function setScope($scope)
+    {
+        $this->scope = is_array($scope) ? $scope : explode(static::$scopeDelimiter, $scope);
+
+        return $this;
+    }
+
+    /**
      * {@inheritdoc}
      */
-    public function request($apiMethod, array $options = [], $httpMethod = 'GET')
+    protected function prepareRequestOptions(array $options, $apiMethod)
     {
         if (null !== $this->accessToken) {
             $options['access_token'] = $this->accessToken;
         }
 
-        return parent::request($apiMethod, $options, $httpMethod);
+        return $options;
     }
 
     /**
@@ -163,15 +176,18 @@ abstract class AbstractOAuth2Client extends AbstractClient implements OAuth2Clie
      */
     protected function handleTokenResponse(ResponseInterface $response)
     {
-        $result = $this->parseResponse($response);
-
-        if ('json' !== $result['type']) {
-            throw new UnknownResponseException($response, $result['contents']);
+        $statusCode = $response->getStatusCode();
+        if (500 <= $statusCode) {
+            throw new ServiceUnavailableException($response);
         }
 
-        $data = json_decode($result['contents'], true);
+        $contentTypes = $response->getHeader('content-type');
+        if (empty($contentTypes) || (0 !== strpos($contentTypes[0], 'application/json') && 0 !== strpos($contentTypes[0], 'text/javascript'))) {
+            throw new UnknownContentTypeException($response, !empty($contentTypes) ? $contentTypes[0] : null);
+        }
 
-        if (200 !== $result['status']) {
+        $data = json_decode($response->getBody()->getContents(), true);
+        if (200 !== $statusCode) {
             $error = isset($data['error']) ? $data['error'] : null;
             throw new RequestTokenException(
                 $response,

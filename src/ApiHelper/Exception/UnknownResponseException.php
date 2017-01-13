@@ -21,18 +21,18 @@ class UnknownResponseException extends \LogicException
     /** @var ResponseInterface */
     protected $response;
 
-    /** @var string */
+    /** @var string|array */
     protected $contents;
 
     /**
      * @param ResponseInterface $response
-     * @param string            $contents
+     * @param string|array      $contents
      */
     public function __construct(ResponseInterface $response, $contents = null)
     {
         $this->response = $response;
         $this->contents = $contents;
-        $this->message = sprintf('Api unknown response (%d): %s.', $response->getStatusCode(), $contents);
+        $this->message = sprintf('Api unknown response (%d): %s.', $response->getStatusCode(), json_encode($contents));
     }
 
     /**

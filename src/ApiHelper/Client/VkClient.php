@@ -4,7 +4,6 @@ namespace ApiHelper\Client;
 
 use ApiHelper\Core\AbstractOAuth2Client;
 use ApiHelper\Exception\ApiException;
-use ApiHelper\Exception\UnknownResponseException;
 use Psr\Http\Message\ResponseInterface;
 
 /**
@@ -18,7 +17,7 @@ class VkClient extends AbstractOAuth2Client
     /**
      * {@inheritdoc}
      */
-    public function request($apiMethod, array $options = [], $httpMethod = 'GET')
+    protected function prepareRequestOptions(array $options, $apiMethod)
     {
         if (null !== $this->locale && !isset($options['lang'])) {
             $options['lang'] = $this->locale;
@@ -28,7 +27,17 @@ class VkClient extends AbstractOAuth2Client
             $options['v'] = $this->version;
         }
 
-        return parent::request($apiMethod, $options, $httpMethod)['response']; // todo
+        return parent::prepareRequestOptions($options, $apiMethod);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function checkResponseError($statusCode, $data, ResponseInterface $response)
+    {
+        if (isset($data['error'])) {
+            throw new ApiException($response, $data['error']['error_msg'], $data['error']['error_code']);
+        }
     }
 
     /**
@@ -37,30 +46,6 @@ class VkClient extends AbstractOAuth2Client
     protected function getApiUrl($method)
     {
         return 'https://api.vk.com/method/'.$method;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    protected function handleResponse(ResponseInterface $response)
-    {
-        $result = $this->parseResponse($response);
-
-        if ('json' !== $result['type']) {
-            throw new UnknownResponseException($response, $result['contents']);
-        }
-
-        $data = json_decode($result['contents'], true);
-
-        if (200 !== $result['status']) {
-            throw new UnknownResponseException($response, $result['contents']);
-        }
-
-        if (isset($data['error'])) {
-            throw new ApiException($response, $data['error']['error_msg'], $data['error']['error_code']);
-        }
-
-        return $data;
     }
 
     /**

@@ -11,12 +11,16 @@
 
 namespace ApiHelper\Core;
 
+use ApiHelper\Exception\ApiException;
+use ApiHelper\Exception\ServiceUnavailableException;
+use ApiHelper\Exception\UnknownContentTypeException;
+
 /**
  * Interface ClientInterface.
  */
 interface ClientInterface
 {
-    const VERSION = '0.2.1';
+    const VERSION = '0.2.2';
 
     /**
      * @param string $apiMethod
@@ -24,6 +28,9 @@ interface ClientInterface
      * @param string $httpMethod
      *
      * @return mixed
+     * @throws ApiException
+     * @throws ServiceUnavailableException
+     * @throws UnknownContentTypeException
      */
     public function request($apiMethod, array $options = [], $httpMethod = 'GET');
 }

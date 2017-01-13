@@ -17,10 +17,8 @@ class MailRuClient extends AbstractOAuth2Client
     /**
      * {@inheritdoc}
      */
-    public function request($apiMethod, array $options = [], $httpMethod = 'GET')
+    protected function prepareRequestOptions(array $options, $apiMethod)
     {
-        $config = [];
-
         $options['method'] = $apiMethod;
         $options['secure'] = 1;
         $options['app_id'] = $this->clientId;
@@ -35,21 +33,18 @@ class MailRuClient extends AbstractOAuth2Client
 
         $options['sig'] = md5($optionsString.$this->clientSecret);
 
-        if (!empty($options)) {
-            if ('POST' === $httpMethod) {
-                $config[RequestOptions::FORM_PARAMS] = $options;
-            } elseif ('GET' === $httpMethod) {
-                $config[RequestOptions::QUERY] = $options;
-            } else {
-                throw new InvalidArgumentException(sprintf('HTTP method %s is not supported', $httpMethod));
-            }
-        }
-
-        $response = $this->httpRequest($httpMethod, $this->getApiUrl(''), $config);
-
-        return $this->handleResponse($response);
+        return $options;
     }
 
+    /**
+     * {@inheritdoc}
+     */
+    protected function checkResponseError($statusCode, $data, ResponseInterface $response)
+    {
+        if (400 <= $statusCode && $statusCode < 500) {
+            throw new ApiException($response, $data['error']['error_msg'], $data['error']['error_code']);
+        }
+    }
 
     /**
      * {@inheritdoc}
@@ -57,30 +52,6 @@ class MailRuClient extends AbstractOAuth2Client
     protected function getApiUrl($method)
     {
         return 'http://www.appsmail.ru/platform/api';
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    protected function handleResponse(ResponseInterface $response)
-    {
-        $result = $this->parseResponse($response);
-
-        if ('json' !== $result['type']) {
-            throw new UnknownResponseException($response, $result['contents']);
-        }
-
-        $data = json_decode($result['contents'], true);
-
-        if (200 === $result['status']) {
-            return $data;
-        }
-
-        if (400 <= $result['status'] && $result['status'] < 500) {
-            throw new ApiException($response, $data['error']['error_msg'], $data['error']['error_code']);
-        }
-
-        throw new UnknownResponseException($response, $result['contents']);
     }
 
     /**

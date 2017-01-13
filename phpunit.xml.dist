@@ -7,8 +7,8 @@
         bootstrap="vendor/autoload.php">
     <php>
         <ini name="error_reporting" value="-1" />
-        <env name="FACEBOOK_CLIENT_ID" value="" />
-        <env name="FACEBOOK_CLIENT_SECRET" value="" />
+        <env name="FACEBOOK_CLIENT_ID" value="test_client_id" />
+        <env name="FACEBOOK_CLIENT_SECRET" value="test_client_secret" />
     </php>
     <testsuites>
         <testsuite name="API Helper Test Suite">

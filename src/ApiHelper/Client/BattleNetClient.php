@@ -4,7 +4,6 @@ namespace ApiHelper\Client;
 
 use ApiHelper\Core\AbstractOAuth2Client;
 use ApiHelper\Exception\ApiException;
-use ApiHelper\Exception\UnknownResponseException;
 use Psr\Http\Message\ResponseInterface;
 
 
@@ -20,7 +19,7 @@ class BattleNetClient extends AbstractOAuth2Client
     const REGION_CHINA = 'cn';
     const REGION_SEA = 'sea';
 
-    /** @var array */
+    /** @var array @todo */
     protected static $regionLocales = [
         self::REGION_US => ['en_US', 'es_MX', 'pt_BR'],
         self::REGION_EUROPE => ['en_GB', 'es_ES', 'fr_FR', 'ru_RU', 'de_DE', 'pt_PT', 'it_IT'],
@@ -29,20 +28,6 @@ class BattleNetClient extends AbstractOAuth2Client
         self::REGION_CHINA => ['zh_CN'],
         self::REGION_SEA => ['en_US']
     ];
-
-    /**
-     * {@inheritdoc}
-     */
-    public function request($apiMethod, array $options = [], $httpMethod = 'GET')
-    {
-        if (null !== $this->locale && !isset($options['locale'])) {
-            $options['locale'] = $this->locale;
-        }
-
-        $options['apikey'] = $this->clientId;
-
-        return parent::request($apiMethod, $options, $httpMethod);
-    }
 
     /**
      * @return string
@@ -55,36 +40,36 @@ class BattleNetClient extends AbstractOAuth2Client
     /**
      * {@inheritdoc}
      */
+    protected function prepareRequestOptions(array $options, $apiMethod)
+    {
+        if (null !== $this->locale && !isset($options['locale'])) {
+            $options['locale'] = $this->locale;
+        }
+
+        $options['apikey'] = $this->clientId;
+
+        return parent::prepareRequestOptions($options, $apiMethod);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function checkResponseError($statusCode, $data, ResponseInterface $response)
+    {
+        if (400 <= $statusCode && $statusCode < 500) {
+            throw new ApiException($response, $data['detail'], $data['code']);
+        }
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     protected function getApiUrl($method)
     {
         $region = $this->getRegion();
         $domain = self::REGION_CHINA === $region ? 'api.battlenet.com.cn' : $region.'.api.battle.net';
 
         return 'https://'.$domain.'/'.$method;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    protected function handleResponse(ResponseInterface $response)
-    {
-        $result = $this->parseResponse($response);
-
-        if ('json' !== $result['type']) {
-            throw new UnknownResponseException($response, $result['contents']);
-        }
-
-        $data = json_decode($result['contents'], true);
-
-        if (200 === $result['status']) {
-            return $data;
-        }
-
-        if (400 <= $result['status'] && $result['status'] < 500) {
-            throw new ApiException($response, $data['detail'], $data['code']);
-        }
-
-        throw new UnknownResponseException($response, $result['contents']);
     }
 
     /**

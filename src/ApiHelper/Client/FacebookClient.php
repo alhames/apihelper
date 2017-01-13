@@ -13,7 +13,6 @@ namespace ApiHelper\Client;
 
 use ApiHelper\Core\AbstractOAuth2Client;
 use ApiHelper\Exception\ApiException;
-use ApiHelper\Exception\UnknownResponseException;
 use Psr\Http\Message\ResponseInterface;
 
 /**
@@ -33,37 +32,23 @@ class FacebookClient extends AbstractOAuth2Client
     /**
      * {@inheritdoc}
      */
-    public function request($apiMethod, array $options = [], $httpMethod = 'GET')
+    protected function prepareRequestOptions(array $options, $apiMethod)
     {
-        if (null !== $this->locale) {
+        if (null !== $this->locale && !isset($options['locale'])) {
             $options['locale'] = $this->locale;
         }
 
-        return parent::request($apiMethod, $options, $httpMethod);
+        return parent::prepareRequestOptions($options, $apiMethod);
     }
 
     /**
      * {@inheritdoc}
      */
-    protected function handleResponse(ResponseInterface $response)
+    protected function checkResponseError($statusCode, $data, ResponseInterface $response)
     {
-        $result = $this->parseResponse($response);
-
-        if ('json' !== $result['type']) {
-            throw new UnknownResponseException($response, $result['contents']);
-        }
-
-        $data = json_decode($result['contents'], true);
-
-        if (400 === $result['status']) {
+        if (400 === $statusCode) {
             throw new ApiException($response, $data['error']['message'], $data['error']['code']);
         }
-
-        if (200 === $result['status']) {
-            return $data;
-        }
-
-        throw new UnknownResponseException($response, $result['contents']);
     }
 
     /**

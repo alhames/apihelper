@@ -12,7 +12,6 @@
 namespace ApiHelper\Client;
 
 use ApiHelper\Core\AbstractClient;
-use ApiHelper\Exception\UnknownResponseException;
 use Psr\Http\Message\ResponseInterface;
 
 /**
@@ -74,18 +73,9 @@ class ReCaptchaClient extends AbstractClient
     }
 
     /**
-     * @param ResponseInterface $response
-     *
-     * @return mixed
+     * {@inheritdoc}
      */
-    protected function handleResponse(ResponseInterface $response)
+    protected function checkResponseError($statusCode, $data, ResponseInterface $response)
     {
-        $result = $this->parseResponse($response);
-
-        if ('json' !== $result['type'] || 200 !== $result['status']) {
-            throw new UnknownResponseException($response, $result['contents']);
-        }
-
-        return json_decode($result['contents'], true);
     }
 }
