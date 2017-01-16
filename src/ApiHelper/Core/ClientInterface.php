@@ -27,10 +27,11 @@ interface ClientInterface
      * @param array  $options
      * @param string $httpMethod
      *
-     * @return mixed
      * @throws ApiException
      * @throws ServiceUnavailableException
      * @throws UnknownContentTypeException
+     *
+     * @return mixed
      */
     public function request($apiMethod, array $options = [], $httpMethod = 'GET');
 }

@@ -1,10 +1,18 @@
 <?php
 
+/*
+ * This file is part of the API Helper package.
+ *
+ * (c) Pavel Logachev <alhames@mail.ru>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace ApiHelper\Client;
 
 use ApiHelper\Core\AbstractOAuth2Client;
 use Psr\Http\Message\ResponseInterface;
-
 
 /**
  * Class BattleNetClient.
@@ -25,7 +33,7 @@ class BattleNetClient extends AbstractOAuth2Client
         self::REGION_KOREA => ['ko_KR'],
         self::REGION_TAIWAN => ['zh_TW'],
         self::REGION_CHINA => ['zh_CN'],
-        self::REGION_SEA => ['en_US']
+        self::REGION_SEA => ['en_US'],
     ];
 
     /**

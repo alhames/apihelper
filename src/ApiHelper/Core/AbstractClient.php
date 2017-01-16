@@ -293,6 +293,7 @@ abstract class AbstractClient implements ClientInterface, \Serializable, LoggerA
 
     /**
      * @todo
+     *
      * @return array
      */
     public function getHistory()
@@ -437,6 +438,7 @@ abstract class AbstractClient implements ClientInterface, \Serializable, LoggerA
 
     /**
      * @todo
+     *
      * @return string
      */
     protected function getLastRequestUri()
@@ -447,7 +449,6 @@ abstract class AbstractClient implements ClientInterface, \Serializable, LoggerA
 
         return $this->history[count($this->history) - 1]['uri'];
     }
-
 
     /**
      * @return array
