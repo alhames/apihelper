@@ -11,8 +11,6 @@
 
 namespace ApiHelper\Exception;
 
-use Psr\Http\Message\ResponseInterface;
-
 /**
  * Class UnknownContentTypeException.
  */
@@ -22,20 +20,22 @@ class UnknownContentTypeException extends RequestException
     protected $contentType;
 
     /**
-     * @param ResponseInterface $response
-     * @param string            $contentType
-     */
-    public function __construct(ResponseInterface $response, $contentType = null)
-    {
-        parent::__construct($response, sprintf('Unknown content type: %s.', $contentType));
-        $this->contentType = $contentType;
-    }
-
-    /**
      * @return string
      */
     public function getContentType()
     {
         return $this->contentType;
+    }
+
+    /**
+     * @param string $contentType
+     *
+     * @return static
+     */
+    public function setContentType($contentType)
+    {
+        $this->contentType = $contentType;
+
+        return $this;
     }
 }

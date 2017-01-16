@@ -3,10 +3,6 @@
 namespace ApiHelper\Client;
 
 use ApiHelper\Core\AbstractOAuth2Client;
-use ApiHelper\Exception\ApiException;
-use ApiHelper\Exception\InvalidArgumentException;
-use ApiHelper\Exception\UnknownResponseException;
-use GuzzleHttp\RequestOptions;
 use Psr\Http\Message\ResponseInterface;
 
 /**
@@ -42,7 +38,7 @@ class MailRuClient extends AbstractOAuth2Client
     protected function checkResponseError($statusCode, $data, ResponseInterface $response)
     {
         if (400 <= $statusCode && $statusCode < 500) {
-            throw new ApiException($response, $data['error']['error_msg'], $data['error']['error_code']);
+            throw $this->createApiException($response, $data, $data['error']['error_code'], $data['error']['error_msg']);
         }
     }
 

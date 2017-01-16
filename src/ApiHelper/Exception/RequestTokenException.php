@@ -11,8 +11,6 @@
 
 namespace ApiHelper\Exception;
 
-use Psr\Http\Message\ResponseInterface;
-
 /**
  * Class ApiException.
  *
@@ -33,23 +31,13 @@ class RequestTokenException extends RequestException
     protected $error;
 
     /** @var string */
+    protected $description;
+
+    /** @var string */
     protected $uri;
 
     /**
-     * @param ResponseInterface $response
-     * @param string            $error
-     * @param string            $description
-     * @param string            $uri
-     */
-    public function __construct(ResponseInterface $response, $error = null, $description = null, $uri = null)
-    {
-        parent::__construct($response, sprintf('%s: %s.', $error, $description));
-        $this->error = $error;
-        $this->uri = $uri;
-    }
-
-    /**
-     * @return string
+     * @return string|null
      */
     public function getError()
     {
@@ -57,10 +45,54 @@ class RequestTokenException extends RequestException
     }
 
     /**
-     * @return string
+     * @param string $error
+     *
+     * @return static
+     */
+    public function setError($error)
+    {
+        $this->error = $error;
+
+        return $this;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getDescription()
+    {
+        return $this->description;
+    }
+
+    /**
+     * @param string $description
+     *
+     * @return static
+     */
+    public function setDescription($description)
+    {
+        $this->description = $description;
+
+        return $this;
+    }
+
+    /**
+     * @return string|null
      */
     public function getUri()
     {
         return $this->uri;
+    }
+
+    /**
+     * @param string $uri
+     *
+     * @return static
+     */
+    public function setUri($uri)
+    {
+        $this->uri = $uri;
+
+        return $this;
     }
 }

@@ -3,11 +3,12 @@
 namespace ApiHelper\Client;
 
 use ApiHelper\Core\AbstractOAuth2Client;
-use ApiHelper\Exception\ApiException;
 use Psr\Http\Message\ResponseInterface;
 
 /**
  * Class OkClient.
+ *
+ * @link https://apiok.ru/dev/
  */
 class OkClient extends AbstractOAuth2Client
 {
@@ -19,7 +20,6 @@ class OkClient extends AbstractOAuth2Client
      */
     protected function prepareRequestOptions(array $options, $apiMethod)
     {
-        $options['method'] = $apiMethod;
         $options['application_key'] = $this->options['application_key'];
         $options['format'] = 'json';
 
@@ -29,8 +29,8 @@ class OkClient extends AbstractOAuth2Client
             $optionsString .= $key.'='.$value;
         }
 
-        $options['sig'] = md5($optionsString.md5($this->accessToken.$this->clientSecret));
-        unset($options['method']);
+        $sessionSecretKey = null === $this->accessToken ? $this->clientSecret : md5($this->accessToken.$this->clientSecret);
+        $options['sig'] = md5($optionsString.$sessionSecretKey);
 
         return parent::prepareRequestOptions($options, $apiMethod);
     }
@@ -41,7 +41,7 @@ class OkClient extends AbstractOAuth2Client
     protected function checkResponseError($statusCode, $data, ResponseInterface $response)
     {
         if (isset($data['error_code'])) {
-            throw new ApiException($response, $data['error']['error_msg'], $data['error']['error_code']);
+            throw $this->createApiException($response, $data, $data['error_code'], $data['error_msg']);
         }
     }
 
@@ -50,7 +50,7 @@ class OkClient extends AbstractOAuth2Client
      */
     protected function getApiUrl($method)
     {
-        return 'https://api.ok.ru/fb.do?method='.$method;
+        return 'https://api.ok.ru/api/'.$method;
     }
 
     /**
@@ -58,6 +58,10 @@ class OkClient extends AbstractOAuth2Client
      */
     protected function getAuthorizeUrl(array $query)
     {
+        if (!isset($query['layout']) && isset($this->options['layout'])) {
+            $query['layout'] = $this->options['layout'];
+        }
+
         return 'https://connect.ok.ru/oauth/authorize?'.http_build_query($query);
     }
 

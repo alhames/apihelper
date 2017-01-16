@@ -3,7 +3,6 @@
 namespace ApiHelper\Client;
 
 use ApiHelper\Core\AbstractOAuth2Client;
-use ApiHelper\Exception\ApiException;
 use Psr\Http\Message\ResponseInterface;
 
 /**
@@ -36,7 +35,7 @@ class VkClient extends AbstractOAuth2Client
     protected function checkResponseError($statusCode, $data, ResponseInterface $response)
     {
         if (isset($data['error'])) {
-            throw new ApiException($response, $data['error']['error_msg'], $data['error']['error_code']);
+            throw $this->createApiException($response, $data, $data['error']['error_code'], $data['error']['error_msg']);
         }
     }
 

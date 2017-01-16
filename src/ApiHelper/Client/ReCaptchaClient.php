@@ -55,7 +55,7 @@ class ReCaptchaClient extends AbstractClient
     }
 
     /**
-     * @return array
+     * {@inheritdoc}
      */
     protected function getRequiredOptions()
     {
@@ -63,9 +63,7 @@ class ReCaptchaClient extends AbstractClient
     }
 
     /**
-     * @param string $method
-     *
-     * @return string
+     * {@inheritdoc}
      */
     protected function getApiUrl($method)
     {

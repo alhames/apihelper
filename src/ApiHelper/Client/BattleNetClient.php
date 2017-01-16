@@ -3,7 +3,6 @@
 namespace ApiHelper\Client;
 
 use ApiHelper\Core\AbstractOAuth2Client;
-use ApiHelper\Exception\ApiException;
 use Psr\Http\Message\ResponseInterface;
 
 
@@ -57,7 +56,7 @@ class BattleNetClient extends AbstractOAuth2Client
     protected function checkResponseError($statusCode, $data, ResponseInterface $response)
     {
         if (400 <= $statusCode && $statusCode < 500) {
-            throw new ApiException($response, $data['detail'], $data['code']);
+            throw $this->createApiException($response, $data, $data['code'], $data['detail']);
         }
     }
 

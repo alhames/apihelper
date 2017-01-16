@@ -3,7 +3,6 @@
 namespace ApiHelper\Client;
 
 use ApiHelper\Core\AbstractOAuth2Client;
-use ApiHelper\Exception\ApiException;
 use Psr\Http\Message\ResponseInterface;
 
 /**
@@ -22,7 +21,7 @@ class YandexClient extends AbstractOAuth2Client
             $options['format'] = 'json';
         }
 
-        $params['oauth_token'] = $this->accessToken;
+        $options['oauth_token'] = $this->accessToken;
 
         return $options;
     }
@@ -33,7 +32,7 @@ class YandexClient extends AbstractOAuth2Client
     protected function checkResponseError($statusCode, $data, ResponseInterface $response)
     {
         if (400 <= $statusCode && $statusCode < 500) {
-            throw new ApiException($response, $data['error']['message'], $data['error']['code']);
+            throw $this->createApiException($response, $data);
         }
     }
 

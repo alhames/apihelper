@@ -178,23 +178,39 @@ abstract class AbstractOAuth2Client extends AbstractClient implements OAuth2Clie
     {
         $statusCode = $response->getStatusCode();
         if (500 <= $statusCode) {
-            throw new ServiceUnavailableException($response);
+            $e = new ServiceUnavailableException();
+            $e->setResponse($response);
+            throw $e;
         }
 
         $contentTypes = $response->getHeader('content-type');
         if (empty($contentTypes) || (0 !== strpos($contentTypes[0], 'application/json') && 0 !== strpos($contentTypes[0], 'text/javascript'))) {
-            throw new UnknownContentTypeException($response, !empty($contentTypes) ? $contentTypes[0] : null);
+            $e = new UnknownContentTypeException();
+            $e->setResponse($response);
+            if (!empty($contentTypes)) {
+                $e->setContentType($contentTypes[0]);
+            }
+            throw $e;
         }
 
         $data = json_decode($response->getBody()->getContents(), true);
         if (200 !== $statusCode) {
-            $error = isset($data['error']) ? $data['error'] : null;
-            throw new RequestTokenException(
-                $response,
-                is_array($error) ? json_encode($error) : $error,
-                isset($data['error_description']) ? $data['error_description'] : null,
-                isset($data['error_uri']) ? $data['error_uri'] : null
-            );
+            $e = new RequestTokenException();
+            $e->setResponse($response);
+
+            if (isset($data['error'])) {
+                $e->setError(is_array($data['error']) ? json_encode($data['error']) : $data['error']);
+            }
+
+            if (isset($data['error_description'])) {
+                $e->setDescription($data['error_description']);
+            }
+
+            if (isset($data['error_uri'])) {
+                $e->setUri($data['error_uri']);
+            }
+
+            throw $e;
         }
 
         if (isset($data['access_token'])) {

@@ -389,13 +389,17 @@ abstract class AbstractClient implements ClientInterface, \Serializable, LoggerA
         // todo: log
 
         if (500 <= $responseStatusCode) {
-            throw new ServiceUnavailableException($response);
+            $e = new ServiceUnavailableException();
+            $e->setResponse($response);
+            throw $e;
         }
 
         $contentTypes = $response->getHeader('content-type');
 
         if (empty($contentTypes)) {
-            throw new UnknownContentTypeException($response);
+            $e = new UnknownContentTypeException();
+            $e->setResponse($response);
+            throw $e;
         }
 
         $contentType = explode(';', $contentTypes[0])[0];
@@ -416,7 +420,10 @@ abstract class AbstractClient implements ClientInterface, \Serializable, LoggerA
                 break;
 
             default:
-                throw new UnknownContentTypeException($response, $contentType);
+                $e = new UnknownContentTypeException();
+                $e->setResponse($response);
+                $e->setContentType($contentType);
+                throw $e;
         }
 
         $this->checkResponseError($responseStatusCode, $data, $response);
@@ -462,6 +469,25 @@ abstract class AbstractClient implements ClientInterface, \Serializable, LoggerA
     }
 
     /**
+     * @param ResponseInterface $response
+     * @param string|array      $data
+     * @param string|int|null   $code
+     * @param string|null       $message
+     *
+     * @return ApiException
+     */
+    final protected function createApiException(ResponseInterface $response, $data, $code = null, $message = null)
+    {
+        $e = new ApiException();
+        $e->setResponse($response);
+        $e->setData($data);
+        $e->setErrorCode($code);
+        $e->setErrorMessage($message);
+
+        return $e;
+    }
+
+    /**
      * @param int               $statusCode
      * @param array|string      $data
      * @param ResponseInterface $response
@@ -476,13 +502,6 @@ abstract class AbstractClient implements ClientInterface, \Serializable, LoggerA
      * @return string
      */
     abstract protected function getApiUrl($method);
-
-//    /**
-//     * @param ResponseInterface $response
-//     *
-//     * @return mixed
-//     */
-//    abstract protected function handleResponse(ResponseInterface $response);
 
     /**
      * {@inheritdoc}

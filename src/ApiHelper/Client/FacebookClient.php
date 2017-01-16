@@ -12,11 +12,12 @@
 namespace ApiHelper\Client;
 
 use ApiHelper\Core\AbstractOAuth2Client;
-use ApiHelper\Exception\ApiException;
 use Psr\Http\Message\ResponseInterface;
 
 /**
  * Class FacebookClient.
+ *
+ * @link https://developers.facebook.com/docs/graph-api
  */
 class FacebookClient extends AbstractOAuth2Client
 {
@@ -46,8 +47,8 @@ class FacebookClient extends AbstractOAuth2Client
      */
     protected function checkResponseError($statusCode, $data, ResponseInterface $response)
     {
-        if (400 === $statusCode) {
-            throw new ApiException($response, $data['error']['message'], $data['error']['code']);
+        if (400 <= $statusCode && $statusCode < 500) {
+            throw $this->createApiException($response, $data, $data['error']['code'], $data['error']['message']);
         }
     }
 
