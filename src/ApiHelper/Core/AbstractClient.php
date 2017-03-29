@@ -479,7 +479,7 @@ abstract class AbstractClient implements ClientInterface, \Serializable, LoggerA
      */
     final protected function createApiException(ResponseInterface $response, $data, $code = null, $message = null)
     {
-        $e = new ApiException();
+        $e = new ApiException(get_class($this).': ('.$code.') '.$message);
         $e->setResponse($response);
         $e->setData($data);
         $e->setErrorCode($code);
