@@ -404,11 +404,12 @@ abstract class AbstractClient implements ClientInterface, \Serializable, LoggerA
         }
 
         $contentType = explode(';', $contentTypes[0])[0];
+        $contents = $response->getBody()->getContents();
 
         switch ($contentType) {
             case 'text/javascript':
             case 'application/json':
-                $data = json_decode($response->getBody()->getContents(), true);
+                $data = json_decode($contents, true);
                 break;
 
             case 'text/xml':
@@ -417,7 +418,7 @@ abstract class AbstractClient implements ClientInterface, \Serializable, LoggerA
             case 'application/xhtml+xml':
             case 'text/html':
             case 'text/plain':
-                $data = $response->getBody()->getContents();
+                $data = $contents;
                 break;
 
             default:
@@ -430,7 +431,7 @@ abstract class AbstractClient implements ClientInterface, \Serializable, LoggerA
         $this->checkResponseError($responseStatusCode, $data, $response);
 
         if (200 !== $responseStatusCode) {
-            throw new UnknownResponseException($response, $data);
+            throw new UnknownResponseException($response, $contents);
         }
 
         return $data;
@@ -479,7 +480,7 @@ abstract class AbstractClient implements ClientInterface, \Serializable, LoggerA
      */
     final protected function createApiException(ResponseInterface $response, $data, $code = null, $message = null)
     {
-        $e = new ApiException(get_class($this).': ('.$code.') '.$message);
+        $e = new ApiException(get_class($this).' #'.$code.': '.$message);
         $e->setResponse($response);
         $e->setData($data);
         $e->setErrorCode($code);
